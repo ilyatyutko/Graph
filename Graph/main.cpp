@@ -9,14 +9,9 @@ int main()
 	TyutkoMath::Edge<int> a(1,5);
 	TyutkoMath::Graph q;
 	q.AddTop("First");
-	q.AddTop("Second", {1});
-	q.AddTop({ 0 });
-	for (auto i : q.GetEdges())
-		std::cout << i.ToString() << std::endl;
-	q.InsertEdge(1,2);
-	std::cout << std::endl;
-	for (auto i : q.GetEdges())
-		std::cout << i.ToString() << std::endl;
+	q.AddTop("Second");
+	q.AddTop("Third");
+	std::cout << std::endl << std::endl << std::endl << q.isEmpty();
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
