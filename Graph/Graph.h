@@ -6,13 +6,11 @@
 #include <string>
 #include <cassert>
 #include <functional>
-
-
+#include <algorithm>
 
 namespace TyutkoMath {
 	typedef int topKey;
 	typedef unsigned char byte;
-
 
 	template <class EdgeValue>
 	class Edge
@@ -136,6 +134,10 @@ namespace TyutkoMath {
 				&& (to == rev.to);
 		}
 
+		std::pair<topKey, topKey> GetIncidentTops()const
+		{
+			return std::make_pair(from, to);
+		}
 		std::list<Edge<EdgeValue>> cut() const
 		{
 			if (isBidirectional)
@@ -295,12 +297,6 @@ namespace TyutkoMath {
 			return this->operator<(toCompare) && this->operator>(toCompare);
 		}
 
-		//bool IsomorthicallyLess(Graph const& toCompare) const;
-		//bool IsomorthicallyMore(Graph const& toCompare) const;
-
-		//bool isIsomorthisTo(Graph const& toCompare) const;
-		//static bool areIsomorthic(Graph const& from, Graph const& to);
-
 		void AddTop()
 		{
 			tops.insert(std::make_pair(tops.size(), std::to_string(tops.size())));
@@ -328,6 +324,15 @@ namespace TyutkoMath {
 				assert(connectWith < static_cast<int>(tops.size()));
 				edges.insert(Edge<byte>(tops.size() - 1, connectWith, 1, true));
 			}
+		}
+		bool AreAdjacent(topKey from, topKey to)const
+		{
+			assert(from >= 0);
+			assert(from < static_cast<int>(tops.size()));
+			assert(to >= 0);
+			assert(to < static_cast<int>(tops.size()));
+			Edge<byte> tmp(from, to, 1, true);
+			return edges.find(tmp) != edges.end();
 		}
 		void RemoveTop(topKey top)
 		{
@@ -382,93 +387,13 @@ namespace TyutkoMath {
 			for (auto& i : toChangeEdges)
 				edges.insert(i);
 		}
-
-		bool hasEdge(Edge<byte> const& toCompare) const
+		int GetOrder()const
 		{
-			auto left = edges.lower_bound(toCompare);
-			auto right = edges.upper_bound(toCompare);
-			for (auto i = left; i != right; ++i)
-				if ( *i == toCompare )
-					return true;
-			return false;
+			return tops.size();
 		}
-		bool hasEdge(topKey from, topKey to) const
+		std::list<topKey> GetConnectedTops(topKey from)const
 		{
-			assert(from >= 0);
-			assert(from < static_cast<int>(tops.size()));
-			assert(to >= 0);
-			assert(to < static_cast<int>(tops.size()));
-			Edge<byte> tmp(from,to,1,true);
-			return edges.find(tmp) != edges.end();
-		}
-		
-		Edge<byte> FindAnyEdge(topKey from, topKey to) const
-		{
-			assert(from >= 0);
-			assert(from < static_cast<int>(tops.size()));
-			assert(to >= 0);
-			assert(to < static_cast<int>(tops.size()));
-			Edge<byte> tmp(from, to, 1, true);
-			auto itr = edges.find(tmp);
-			if (itr != edges.end())
-				return *(itr);
-			else
-				return Edge<byte>();
-		}
-		Edge<byte> FindMinEdge(topKey from, topKey to) const
-		{
-			auto list = this->FindAllEdges(from, to);
-			auto result = *(list.begin());
-			for (auto itr = list.begin(); itr != list.end(); ++itr)
-				if (itr->value < result.value)
-					result = *itr;
-			return result;
-		}
-		Edge<byte> FindMaxEdge(topKey from, topKey to) const
-		{
-			auto list = this->FindAllEdges(from, to);
-			auto result = *(list.begin());
-			for (auto itr = list.begin(); itr != list.end(); ++itr)
-				if (itr->value > result.value)
-					result = *itr;
-			return result;
-		}
-		std::list<Edge<byte>> FindAllEdges(topKey from, topKey to) const
-		{
-			assert(from >= 0);
-			assert(from < static_cast<int>(tops.size()));
-			assert(to >= 0);
-			assert(to < static_cast<int>(tops.size()));
-			Edge<byte> tmp(from, to, 1, true);
-			std::list<Edge<byte>> answer;
-			std::multiset<Edge<byte>>::iterator itrRight = (edges.upper_bound(tmp));
-			std::multiset<Edge<byte>>::iterator itrLeft = (edges.lower_bound(tmp));
-			for (auto i = itrLeft; i != itrRight; ++i)
-				answer.push_back(*i);	 
-			return answer;
-		}
-		std::list<Edge<byte>> GetAllEdges()  const
-		{
-			std::list<Edge<byte>> answer;
-			for (auto i : edges)
-				answer.push_back(i);
-			return answer;
-		}
-		std::list<Edge<byte>> getIncidentEdges(topKey from)
-		{
-			std::list<Edge<byte>> answer;
-			for (auto i : edges)
-				if (i.isIncidentTo(from))
-					answer.push_back(i);
-			return answer;
-		}
-		std::pair<topKey, topKey> getIncidentTops(Edge<byte> const& edge)
-		{
-			return std::make_pair(edge.from, edge.to);
-		}
-		std::list<topKey> getConnectedTops(topKey from)
-		{
-			auto list = this->getIncidentEdges(from);
+			auto list = this->GetIncidentEdges(from);
 			std::list<topKey> answer;
 			for (auto itr = edges.begin(); itr != edges.end(); ++itr)
 			{
@@ -485,6 +410,74 @@ namespace TyutkoMath {
 			answer.sort();
 			return answer;
 		}
+		int GetPower(topKey top)const
+		{
+			return GetIncidentEdges(top).size();
+		}
+		int GetMaxPower()const
+		{
+			if (tops.size() == 0)
+				return 0;
+			int max = 0;
+			for (auto i : tops) 
+			{
+				auto tmp = this->GetPower(i.first);
+				if (tmp > max)
+					max = tmp;
+			}
+			return max;
+		}
+		int GetMinPower()const
+		{
+			if (tops.size() == 0)
+				return 0;
+			int max =this->GetPower(tops.begin()->first);
+			for (auto i : tops)
+			{
+				auto tmp = this->GetPower(i.first);
+				if (tmp > max)
+					max = tmp;
+			}
+			return max;
+		}
+		topKey GetTopWithMaxPower()const
+		{
+			if (tops.size() == 0)
+				throw std::exception("Empty Graph");
+			int max = 0;
+			topKey maxTop = -1;
+			for (auto i : tops)
+			{
+				auto tmp = this->GetPower(i.first);
+				if (tmp > max)
+				{
+					max = tmp;
+					maxTop = i.first;
+				}
+			}
+			return maxTop;
+		}
+		topKey GetTopWithMinPower()const
+		{
+			if (tops.size() == 0)
+				throw std::exception("Empty Graph");
+			int max = this->GetPower(tops.begin()->first);
+			int maxTop = -1;
+			for (auto i : tops)
+			{
+				auto tmp = this->GetPower(i.first);
+				if (tmp > max)
+				{
+					max = tmp;
+					maxTop = i.first;
+				}
+			}
+			return maxTop;
+		}
+		int CountOfEdgesBetween(topKey from, topKey to)const
+		{
+			return this->GetEachEdge(from, to).size();
+		}
 
 		void InsertEdge(topKey from, topKey to, byte size = 1, bool bidirectional = true)
 		{
@@ -493,6 +486,10 @@ namespace TyutkoMath {
 			assert(to >= 0);
 			assert(to < static_cast<int>(tops.size()));
 			edges.insert(Edge<byte>(from, to, size, bidirectional));
+		}
+		void InsertEdge(Edge<byte> const& edge)
+		{
+			edges.insert(edge);
 		}
 		void RemoveEdges(topKey from, topKey to)
 		{
@@ -519,19 +516,124 @@ namespace TyutkoMath {
 			if ((tmp = this->FindEdgeIter(a, b)) != this->edges.end())
 				this->edges.erase(tmp);
 		}
+
+		bool hasEdge(Edge<byte> const& toCompare) const
+		{
+			auto left = edges.lower_bound(toCompare);
+			auto right = edges.upper_bound(toCompare);
+			for (auto i = left; i != right; ++i)
+				if ( *i == toCompare )
+					return true;
+			return false;
+		}		
+		Edge<byte> GetAnyEdge(topKey from, topKey to) const
+		{
+			assert(from >= 0);
+			assert(from < static_cast<int>(tops.size()));
+			assert(to >= 0);
+			assert(to < static_cast<int>(tops.size()));
+			Edge<byte> tmp(from, to, 1, true);
+			auto itr = edges.find(tmp);
+			if (itr != edges.end())
+				return *(itr);
+			else
+				return Edge<byte>();
+		}
+		Edge<byte> GetMinEdge(topKey from, topKey to) const
+		{
+			auto list = this->GetEachEdge(from, to);
+			auto result = *(list.begin());
+			for (auto itr = list.begin(); itr != list.end(); ++itr)
+				if (itr->value < result.value)
+					result = *itr;
+			return result;
+		}
+		Edge<byte> GetMaxEdge(topKey from, topKey to) const
+		{
+			auto list = this->GetEachEdge(from, to);
+			auto result = *(list.begin());
+			for (auto itr = list.begin(); itr != list.end(); ++itr)
+				if (itr->value > result.value)
+					result = *itr;
+			return result;
+		}
+		std::list<Edge<byte>> GetEachEdge(topKey from, topKey to) const
+		{
+			assert(from >= 0);
+			assert(from < static_cast<int>(tops.size()));
+			assert(to >= 0);
+			assert(to < static_cast<int>(tops.size()));
+			Edge<byte> tmp(from, to, 1, true);
+			std::list<Edge<byte>> answer;
+			std::multiset<Edge<byte>>::iterator itrRight = (edges.upper_bound(tmp));
+			std::multiset<Edge<byte>>::iterator itrLeft = (edges.lower_bound(tmp));
+			for (auto i = itrLeft; i != itrRight; ++i)
+				answer.push_back(*i);	 
+			return answer;
+		}
+		std::list<Edge<byte>> GetAllEdges()  const
+		{
+			std::list<Edge<byte>> answer;
+			for (auto& i : edges)
+				answer.push_back(i);
+			return answer;
+		}
+		std::list<Edge<byte>> GetIncidentEdges(topKey from)const
+		{
+			std::list<Edge<byte>> answer;
+			for (auto& i : edges)
+				if (i.isIncidentTo(from))
+					answer.push_back(i);
+			return answer;
+		}
+		std::pair<topKey, topKey> GetIncidentTops(Edge<byte> const& edge)const
+		{
+			return std::make_pair(edge.from, edge.to);
+		}
+		bool areIncident(topKey top, Edge<byte> const& edge)const
+		{
+			topKey a, b;
+			std::tie(a,b) = this->GetIncidentTops(edge);
+			return  a == top || top == b;
+		}
 		
-		/*
-		Graph GetSubGraphOf(std::vector<topKey>)  const;
-		Graph GetSubGraphWithOut(std::vector<topKey>) const;
-		Graph GetAdditionGraph()  const;
+		Graph GetSubGraphOf(std::vector<topKey> topList)  const
+		{
+			Graph answer;
+			for (auto& i : topList)
+			{
+				answer.AddTop(this->tops.find(i)->second);
+			}
+			for (auto& i : edges)
+			{
+				auto tmp = i.GetIncidentTops();
+				if (std::find(topList.begin(), topList.end(), tmp.first) != topList.end()
+					&& std::find(topList.begin(), topList.end(), tmp.second) != topList.end())
+					answer.InsertEdge(i);
+			}
+			return answer;
+		}
+		Graph GetSubGraphWithOut(std::vector<topKey> topList) const
+		{
+			Graph answer(*this);
+			std::sort(topList.begin(), topList.end(), std::greater<int>());
+			for (auto& i : topList)
+				answer.RemoveTop(i);
+			return answer;
+		}
+		Graph GetFullGraph()const;
+		Graph& FillGraph();
+		/*Graph GetAdditionGraph()  const;
 
 		Cycle FindCycles()  const;
 		Cycle FindSimpleCycles()  const;
 
-		size_t FindDistance()  const;
+		size_t FindDistance()  const;*/
 
-		std::list<std::string> GetTops()  const;
-		std::list<std::string> GetEdges()  const;*/
+		//bool IsomorthicallyLess(Graph const& toCompare) const;
+		//bool IsomorthicallyMore(Graph const& toCompare) const;
+		//bool isIsomorthisTo(Graph const& toCompare) const;
+		//static bool areIsomorthic(Graph const& from, Graph const& to);
 
 		bool isEmpty() const
 		{
@@ -544,18 +646,69 @@ namespace TyutkoMath {
 			{
 				auto tmp = f_itr;
 				for (auto s_itr = ++tmp; s_itr!=tops.end();++s_itr)
-					if (!this->hasEdge(f_itr->first, s_itr->first) 
-						|| !this->hasEdge(s_itr->first, f_itr->first))
+					if (!this->AreAdjacent(f_itr->first, s_itr->first)
+						|| !this->AreAdjacent(s_itr->first, f_itr->first))
 						return false;
 			}
 			return true;
 		}
-		/*bool isTree() const;
-		bool isMulti() const;
-		bool isPseudo() const;
-		bool isInterConnected() const;
+		bool isRegular()const
+		{
+			if (tops.size() == 0)
+				return true;
+			auto power = this->GetPower(tops.begin()->first);
+			for (auto& i : tops)
+				if (this->GetPower(i.first) != power)
+					return false;
+			return true;
+		}
+		bool isTree() const;
+		bool isCycle()const
+		{
+			return this->GetMaxPower() == this->GetMinPower() == 2 && CountOfComponents() == 1;
+		}
+		bool isWheel()const
+		{
+			return (this->GetSubGraphWithOut({ this->GetTopWithMaxPower() }).isCycle());
+		}
+		bool isMulti() const
+		{
+			for (auto& i : edges)
+				if (i.isLoop())
+					return false;
+			return true;
+		}
+		bool isSimple() const
+		{
+			if (this->isMulti())
+			{
+				auto preend = --tops.end();
+				for (auto i = tops.begin(); i != preend; ++i)
+				{
+					auto tmp = ++i;
+					for (auto s = tmp; s != tops.end(); ++s)
+						if (this->CountOfEdgesBetween(i->first, s->first) > 1
+							|| this->CountOfEdgesBetween(s->first, i->first) > 1)
+							return false;
+				}
+				return true;
+			}
+			else
+				return false;
+		}
+		bool isDirectioned()const
+		{
+			for (auto& i : edges)
+				if (!i.isBidirectional)
+					return true;
+			return false;
+		}
+		bool isInterConnected() const
+		{
+			return this->CountOfComponents() == 1;
+		}
 		bool isDicotyledonous() const;
-		int CountOfComponents() const;*/
+		int CountOfComponents() const;
 
 	};
 
