@@ -147,18 +147,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="base_Edge.cpp" />
-    <ClCompile Include="base_Graph.cpp" />
-    <ClCompile Include="Edges.cpp" />
-    <ClCompile Include="Graph.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="orderedEdge.cpp" />
-    <ClCompile Include="unordered_Edge.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="base_Graph.h" />
-    <ClInclude Include="EdgeHolder.h" />
-    <ClInclude Include="Edges.h" />
     <ClInclude Include="Graph.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

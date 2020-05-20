@@ -6,12 +6,20 @@
 
 int main()
 {
-	/*TyutkoMath::base_Edge<int> a(1,5);
 	TyutkoMath::Graph q;
-	q.AddTop("First");
-	q.AddTop("Second");
-	q.AddTop("Third");
-	std::cout << std::endl << std::endl << std::endl << q.isEmpty();*/
+	q.AddTop({});
+	q.AddTop({0});
+	q.AddTop({1}); 
+	q.AddTop({2});
+	q.AddTop({ 3 });
+	q.AddTop({ 4 });
+	q.AddTop({ 5 });
+	q.AddTop({ 6 });
+	q.AddTop({ 7 });
+	q.AddTop({});
+	q.AddTop({});
+	q.AddTop({});
+	std::cout << std::endl << std::endl << std::endl << q.CountOfComponents();
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
